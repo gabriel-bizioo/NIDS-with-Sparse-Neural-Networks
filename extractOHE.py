@@ -11,7 +11,17 @@ columns = ['Dst Port', 'Protocol', 'Label']
 df = pd.read_csv(args.file, usecols=columns, low_memory=False)[columns]
 print(df.head())
 
-labels = ['BENIGN', 'Botnet', 'Botnet - Attempted', 'Portscan', 'DDoS']
 le = skp.LabelEncoder()
-le.fit(labels)
-list(le.classes_)
+output = le.fit_transform(df['Label'])
+print(list(le.classes_))
+print(output)
+
+df['Dst Port'] = df['Dst Port'].astype(str)
+df[Protocol] = df[Protocol].astype(str)
+
+features_ohe = df[['Dst Port', 'Protocol']]
+features_ohe = features_ohe.fillna(0).astype(int).astype(str)
+ohe = skp.OneHotEncoder(sparse_output=True, handle_unknown='ignore')
+output = ohe.fit_transform(features_ohe)
+
+
