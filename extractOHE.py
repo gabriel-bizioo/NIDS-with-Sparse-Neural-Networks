@@ -27,8 +27,14 @@ print(labels.size)
 ports = [str(i) for i in range(65536)]
 protocols = [str(i) for i in range(256)]
 
+
 bins_pkt = [0, 64, 512, 1000, 1500, float('inf')]
+bins_iat = [0, 1, 10, 100, 1000, 10000]
+bins_flow = [0, 1000, 10000, 100000]
+bins_ratio = [0, 0.5, 1.0, 2.0, float('inf')]
+
 labels_pkt = ['Tiny', 'Small', 'Medium', 'Large', 'Jumbo']
+
 df['Pkt_Bin'] = pd.cut(df['Packet Length Std'], bins=bins_pkt, labels=labels_pkt)
 
 ohe = skp.OneHotEncoder(categories=[ports, protocols], sparse_output=True, handle_unknown='ignore')
