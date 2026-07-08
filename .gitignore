@@ -1,2 +1,5 @@
 wholeweek.csv
-
+venv/
+datasets/
+sparse-datasets/
+*.pkl
