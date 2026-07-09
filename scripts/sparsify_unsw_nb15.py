@@ -69,6 +69,7 @@ def main():
     parser.add_argument("--input", required=True, type=str, help="Path to input UNSW-NB15 CSV file")
     parser.add_argument("--output", required=True, type=str, help="Path to save output sparse file (SVMLight format)")
     parser.add_argument("--baseline", required=True, type=int, choices=[1, 2, 3], help="Baseline configuration version (1, 2, or 3)")
+    parser.add_argument("--window-size", default=1, type=int, help="Number of consecutive flows to include in sliding window")
     parser.add_argument("--label-col", default="label", choices=["label", "attack_cat"], help="Column to use as output label")
     parser.add_argument("--save-mapping", type=str, help="Path to save JSON file with feature column index mapping")
     parser.add_argument("--save-label-mapping", type=str, help="Path to save JSON file with label mapping")
@@ -185,6 +186,22 @@ def main():
         labels = le.transform(cleaned_labels)
         label_mapping = {str(cls): int(idx) for idx, cls in enumerate(le.classes_)}
         
+    # Apply sliding time-window if window_size > 1
+    if args.window_size > 1:
+        print(f"Applying sliding time-window of size N = {args.window_size}...")
+        from scipy.sparse import vstack, hstack, csr_matrix
+        num_samples, num_features = sparse_features.shape
+        cols = []
+        for j in range(args.window_size - 1, -1, -1):
+            if j == 0:
+                cols.append(sparse_features)
+            else:
+                pad = csr_matrix((j, num_features))
+                shifted = sparse_features[:(num_samples - j)]
+                shifted_full = vstack([pad, shifted], format='csr')
+                cols.append(shifted_full)
+        sparse_features = hstack(cols, format='csr')
+
     print(f"Features shape: {sparse_features.shape}")
     print(f"Label classes counts: {len(label_mapping)} classes")
     
@@ -196,15 +213,29 @@ def main():
     if args.save_mapping:
         feature_names = ohe.get_feature_names_out(cols_to_encode)
         
-        # Dynamically compute feature offsets
+        # Dynamically compute feature offsets per step
         offsets = {}
-        current_offset = 0
-        for col_name, cat_list in zip(cols_to_encode, categories):
-            offsets[col_name] = [current_offset, current_offset + len(cat_list)]
-            current_offset += len(cat_list)
+        features_per_step = len(feature_names)
+        
+        if args.window_size > 1:
+            for step in range(args.window_size):
+                step_offsets = {}
+                current_offset = step * features_per_step
+                for col_name, cat_list in zip(cols_to_encode, categories):
+                    step_offsets[col_name] = [current_offset, current_offset + len(cat_list)]
+                    current_offset += len(cat_list)
+                offsets[f"step_{step}"] = step_offsets
+            total_features = features_per_step * args.window_size
+        else:
+            current_offset = 0
+            for col_name, cat_list in zip(cols_to_encode, categories):
+                offsets[col_name] = [current_offset, current_offset + len(cat_list)]
+                current_offset += len(cat_list)
+            total_features = features_per_step
             
         mapping_dict = {
-            "total_features": len(feature_names),
+            "total_features": total_features,
+            "window_size": args.window_size,
             "offsets": offsets
         }
         with open(args.save_mapping, 'w') as f:
