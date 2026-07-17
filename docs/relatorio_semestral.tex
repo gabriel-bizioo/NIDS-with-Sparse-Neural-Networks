@@ -1,0 +1,156 @@
+\documentclass[11pt,a4paper,oneside]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazilian]{babel}
+\usepackage{geometry}
+\geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{url}
+\usepackage{cite}
+\usepackage{microtype}
+\usepackage{hyperref}
+
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\definecolor{mymauve}{rgb}{0.58,0,0.82}
+\definecolor{codebackground}{rgb}{0.96,0.96,0.96}
+
+\lstset{
+  backgroundcolor=\color{codebackground},
+  basicstyle=\ttfamily\small,
+  breakatwhitespace=false,
+  breaklines=true,
+  captionpos=b,
+  commentstyle=\color{mygreen},
+  escapeinside={\%*}{*)},
+  extendedchars=true,
+  keepspaces=true,
+  keywordstyle=\color{blue},
+  language=bash,
+  numbers=left,
+  numbersep=5pt,
+  numberstyle=\tiny\color{mygray},
+  rulecolor=\color{black},
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  stepnumber=1,
+  stringstyle=\color{mymauve},
+  tabsize=2,
+  title=\lstname
+}
+
+\title{\textbf{Detecção de Intrusão em Redes com Redes Neurais Esparsas: Relatório de Atividades, Viabilidade Teórica e Reprodutibilidade}}
+\author{\textbf{Gabriel Bizio} \\
+Universidade Federal do Paraná (UFPR) \\
+\texttt{bizio.gabriel@gmail.com}}
+\date{17 de Julho de 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Foi estudada a viabilidade teórica e prática do uso de redes neurais esparsas em Sistemas de Detecção de Intrusão em Redes (NIDS) aceleradas pelo algoritmo SLIDE (\textit{Sub-Linear Deep learning Engine}). Investigou-se o compromisso entre a representação de tráfego de rede via atributos contínuos tradicionais baseados em fluxos (\textit{flow-based}) e a representação esparsa estruturada em janelas temporais de pacotes. Apresentam-se resultados experimentais preliminares nos \textit{datasets} CIC-IDS2017 e UNSW-NB15, que, quando convertidos em representações esparsas em janelas temporais, atingiram acurácias máximas de 64\% e 70\%, respectivamente. Analisam-se os gargalos de infraestrutura e de modelagem de dados enfrentados, e discute-se detalhadamente a hipótese de viabilidade do SLIDE sob alta dimensionalidade de entrada.
+\end{abstract}
+
+\section{Introdução}
+O cenário digital moderno é marcado por ataques cibernéticos de volume e sofisticação cada vez maiores, o que, por consequência, traz a necessidade de mecanismos avançados para manter a segurança de redes sensíveis. Entre esses mecanismos, Sistemas de Detecção de Intrusão em Redes (NIDS), que atuam inspecionando tráfego de redes em busca de padrões maliciosos de conexão, têm se tornado cada vez mais essenciais como camada crítica de defesa.
+
+Avanços recentes na área resultaram no uso de redes neurais e aprendizado de máquina para a implementação de NIDS, trazendo melhora significativa na eficácia de tais sistemas, visto que modelos neurais propriamente arquitetados possuem a capacidade de correlacionar padrões mais complexos entre as características das conexões, encontrando assim ameaças previamente desconhecidas.
+
+Um dos desafios na construção de redes neurais para atuação como NIDS é a alta dimensionalidade dos padrões presentes nas conexões, o que exige tempo de extração e tratamento de dados para representações baseadas em fluxo, além de demandar, na maioria dos casos, hardware dedicado ao processamento paralelo massivo (GPU) para treinamento em tempo viável. Existe, porém, a necessidade de utilização de NIDS em ambientes com capacidades computacionais mais restritas, sem a disponibilidade de GPUs.
+
+Para isso, Chen et al. \cite{chen2020slide} utilizam a técnica de Hashing Sensível à Localidade (LSH) para obter um algoritmo de tempo sub-linear (SLIDE -- \textit{Sub-Linear Deep Learning Engine}), viabilizando o treinamento de redes neurais em processadores convencionais, desde que suas ativações sejam suficientemente esparsas.
+
+Nota-se que o contexto de segurança de redes tem como característica um fluxo massivo de dados de conexões, o que pode viabilizar a utilização de redes neurais esparsas como NIDS, ao possibilitar a extração de dados com espaços de inferência de alta dimensionalidade. Além disso, a disponibilidade de um espaço de entrada de tamanho suficientemente grande viabiliza descartar a necessidade de tratamento complexo dos dados extraídos para obtenção das características de entrada usuais, reduzindo o tempo necessário para inferência.
+
+Com essas considerações, os objetivos deste semestre concentraram-se em avaliar a aplicabilidade do uso de redes neurais esparsas na atuação como NIDS, a fim de tornar viável a sua utilização em cenários que apresentam restrições no uso de GPUs.
+
+\section{Revisão Bibliográfica e Seleção de Datasets}
+A fundamentação teórica e metodológica do projeto baseou-se na literatura recente sobre aprendizado profundo aplicado a tráfego de rede, esparsidade de representação e características de conjuntos de dados específicos. Um dos grandes gargalos para a aplicação prática de modelos de aprendizado de máquina em NIDS em tempo real é a latência associada à extração de características e processamento de fluxos na inferência. Conforme discutido por Ghadermazi et al. \cite{ghadermazi2024towards}, os sistemas tradicionais dependem de agregadores de fluxo que geram atrasos incompatíveis com a mitigação ativa, evidenciando a necessidade de reduzir o processamento de dados na inferência através de representações diretas de pacotes sequenciais. Para contornar essa barreira e obter uma representação de dinâmica temporal do tráfego sem acumular agregações complexas de dados de fluxo, utilizou-se o conceito de janelas temporais deslizantes de pacotes baseado em Raskovalov et al. \cite{raskovalov2024nids}, que indica ser possível caracterizar conexões anômalas analisando apenas o histórico sequencial imediato de cabeçalhos.
+
+O dimensionamento estrutural da rede e de seus hiperparâmetros (taxa de aprendizado, largura das camadas ocultas e parâmetros do hash) seguiu as Surveys de Raieli \cite{raieli2025tabular} sobre aprendizado profundo tabular e de Franceschi et al. \cite{franceschi2024hyperparameter} dedicada à otimização sistemática de hiperparâmetros, complementados pelas técnicas consolidadas de transformação qualitativa e normalização de atributos para processamento neural \cite{numberanalyticspreprocessing}.
+
+No âmbito dos dados experimentais, a seleção baseou-se no estudo crítico de Goldshmidt e Chudá \cite{goldschmidt2025network}, que examina a degradação temporal e as limitações de generalização dos datasets históricos de segurança de redes, como a base KDD Cup 99 \cite{tavallaee2009detailed}. Dessa forma, optou-se pela utilização das bases contemporâneas UNSW-NB15 \cite{moustafa2015unsw} e CIC-IDS2017 \cite{sharafaldin2018toward}, cujos fluxos combinam comportamentos normais de tráfego com vetores de ataques modernos. O desafio técnico central consistiu em aplicar processos de esparsamento nos atributos dessas duas bases, originalmente tabuladas com features numéricas contínuas de fluxo, de forma a torná-las compatíveis com as exigências de entrada esparsa do algoritmo SLIDE sem que o classificador perdesse o poder de distinção estatística entre as classes.
+
+\section{O Algoritmo SLIDE e a Hipótese de Inflexão Computacional}
+O algoritmo SLIDE (\textit{Sub-Linear Deep learning Engine}), introduzido por Chen et al. \cite{chen2020slide}, baseia-se na substituição do produto escalar denso de matrizes de pesos sinápticos e ativações em redes neurais de grande porte por uma consulta probabilística de vizinhos mais próximos. Esse mecanismo baseia-se em Hashing Sensível à Localidade (LSH), em que vetores semelhantes na entrada e neurônios com pesos espacialmente próximos possuem alta probabilidade de colisão sob a mesma assinatura de hash em tabelas pré-computadas. Por meio dessa busca, apenas uma fração de neurônios ativos $k \ll H$ é calculada e atualizada no passo de retropropagação, o que reduz a complexidade teórica das multiplicações matriciais para tempo sub-linear.
+
+O cálculo LSH, no entanto, introduz um custo fixo inerente ao cálculo dos hashes da entrada e acesso às tabelas. Para compensar essa sobrecarga de processamento frente a matrizes densas otimizadas para processadores via instruções vetoriais (como AVX-512), a literatura aponta que a entrada deve apresentar um alto grau de esparsidade \cite{chen2020slide}. Caso contrário, o tempo de cálculo dos hashes e acesso não sequencial às tabelas na memória RAM anula as vantagens do processamento esparso. Nota-se, a partir disso, a necessidade de uma justificativa para a utilização de dimensões de entrada extremamente altas, de forma a dar sentido à escolha do SLIDE como motor de treinamento em vez de outros algoritmos para redes densas convencionais.
+
+A viabilidade teórica e prática esperada ao adotar um espaço de atributos expandido via codificação esparsa baseia-se no fato de que mapear diretamente os cabeçalhos brutos das janelas temporais de pacotes na entrada elimina a necessidade de computação em tempo de execução de atributos estatísticos contínuos (como médias, desvios padrões e tempos de chegada de pacotes), que aumentam o tempo do percurso total desde a extração dos dados até a inferência, tanto pela necessidade de processamento extra quanto pela espera por mais pacotes de fluxo \cite{ghadermazi2024towards}. Sob a utilização de entradas esparsas de alta dimensionalidade, toda a modelagem de correlações e padrões não-lineares presentes nos cabeçalhos de pacote durante a janela de tempo é delegada aos pesos sinápticos do próprio classificador durante o treinamento.
+
+\section{Estratégias de Esparsamento e Experimentos Preliminares}
+Para validar o pipeline de dados e verificar a acurácia sob diferentes espaços de entrada, o projeto progrediu por cinco versões de representações esparsas estruturadas (V1 a V5), cujos detalhes de esparsamento e dimensionalidade foram avaliados empiricamente na máquina de desenvolvimento local \texttt{t101}.
+
+As versões iniciais V1, V2 e V3 basearam-se na extração de features estatísticas e sumarizadas contidas nas tabelas dos datasets como UNSW-NB15. A versão V1 estruturou os atributos de protocolo, estado de conexão, serviço e contagem de pacotes em representações One-Hot Encoding categóricas e binadas, totalizando 178 dimensões. A versão V2 expandiu esse conjunto incorporando metadados de cabeçalho como os tempos de vida e os tamanhos das janelas TCP, gerando 215 dimensões. A versão V3 adicionou contadores estatísticos de conexões sobre janelas de tempo deslizantes do próprio dataset, acumulando 515 dimensões esparsas. 
+
+Embora essas três versões permitissem validar o pipeline de dados, elas dependiam de dados pré-processados offline. Por isso, desenvolveram-se as versões V4 e V5 focadas em capturas brutas de pacotes (PCAP), organizadas em janelas de tempo deslizantes de tamanho $N=10$ pacotes da mesma conexão. A versão V4 mapeia o protocolo, as flags TCP, os tipos de porta de origem e destino, os papéis da sub-rede local e o tamanho físico de cada pacote individualmente, gerando 1.301 dimensões por pacote e um total de 13.010 dimensões de entrada com exatamente 60 features ativas (esparsidade de $99,54\%$). A versão V5 amplia a representação de cabeçalho adicionando os valores de TTL do IP (relevantes para fingerprinting de sistema operacional) e as variações sequenciais dos números de sequência e confirmação TCP, consolidando 1.313 dimensões por pacote e 13.130 dimensões totais na janela com 90 features ativas (esparsidade de $99,31\%$).
+
+Os testes de acurácia foram executados variando as dimensões das camadas ocultas (32, 128, 256 e 1024 neurônios). Cabe ressaltar que a avaliação experimental empírica foi realizada exclusivamente utilizando os dados correspondentes às versões iniciais V1 e V2. As representações mais recentes e complexas disponíveis na branch 'julho' (V3, V4 e V5) ainda não foram submetidas a testes de treino e inferência no algoritmo SLIDE. Nos testes preliminares com o CIC-IDS2017 sob a representação simples de protocolo e portas (V1), o modelo alcançou apenas 64\% de acurácia, sinalizando subajuste e memorização estática de portas de ataques. Ao estender os testes para a representação da versão V2 no dataset UNSW-NB15, a acurácia elevou-se para 70\%. A estagnação nessa faixa evidenciou a dificuldade em esparsar variáveis numéricas contínuas (como taxas de bytes e durações de conexões) sem gerar explosão de dimensionalidade ou perda das correlações estatísticas entre elas, configurando-se no principal gargalo técnico para atingir desempenhos superiores.
+
+\section{Metodologia de Execução, Otimização e Reprodutibilidade} \label{sec:metodologia}
+Para elevar o patamar de acurácia da classificação esparsa, três estratégias de otimização na modelagem do classificador foram propostas. A primeira consiste em substituir a acurácia global pela métrica de Macro-F1 como orientadora do treinamento, garantindo a medição precisa do desempenho do modelo em classes de ataques raros mas críticos (como Worms e Shellcode) que de outra forma seriam ignoradas pelo desbalanceamento clássico de tráfego. A segunda estratégia trata-se da incorporação de ponderação de perdas no backpropagation do SLIDE. Os pesos de classe serão calculados a partir das frequências inversas no conjunto de treino:
+\begin{equation}
+    w_c = \frac{N}{C \times N_c}
+\end{equation}
+onde $N$ é o total de amostras, $C$ é o número de classes, e $N_c$ é o total de amostras da classe $c$. O erro $\delta_L$ na saída da rede será escalado multiplicando o delta pelo peso da classe verdadeira:
+\begin{equation}
+    \delta_L = w_{\text{true\_class}} \times (\mathbf{a}_L - \mathbf{y})
+\end{equation}
+A terceira otimização é uma arquitetura de classificação em gate hierárquico, na qual um primeiro modelo SLIDE atua como filtro binário de detecção (Normal vs. Ataque) priorizando alta revocação, e apenas as conexões classificadas como ataque são encaminhadas para um segundo modelo SLIDE multiclasse focado no diagnóstico do tipo da anomalia.
+
+Para reproduzir os resultados preliminares do projeto, os scripts utilizados encontram-se em \url{https://github.com/gabriel-bizioo/NIDS-with-Sparse-Neural-Networks}. Para as versões 1 a 3, o repositório disponibiliza scripts de esparsamento específicos para cada base de dados analisada: \texttt{sparsify\_unsw\_nb15.py} para o dataset UNSW-NB15 e \texttt{extractOHE.py} para o dataset CIC-IDS2017. O processamento de pacotes brutos PCAP é realizado com \texttt{sparsify\_pcap.py} para a versão V4 e \texttt{sparsify\_pcap\_v5.py} para a versão V5. Enquanto as versões 3, 4 e 5 estão disponíveis em um mesmo commit, na branch 'julho', as versões 1 e 2 podem ser acessadas pelo histórico de commits na branch 'main'.
+
+A execução do treinamento esparso utiliza o algoritmo SLIDE original, disponível no repositório de referência em \url{https://github.com/keroro824/HashingDeepLearning}, compilado localmente em arquitetura Linux com suporte a OpenMP habilitado no compilador GCC (`-fopenmp`) para paralelismo em CPU.
+Os hiperparâmetros do treinamento são configurados por meio de arquivos CSV, um por dataset, chamados de \texttt{Config\_<DATASET>.csv}, cujo formato, variáveis de caminhos e hiperparâmetros necessários são exemplificados:
+
+\begin{lstlisting}[caption={Exemplo de Configuração de Parâmetros (Config\_<DATASET>.csv)}]
+RangePow = 6,18
+K = 2,6
+L = 20,50
+Sparsity = 1,0.005,1,1
+
+Batchsize=128
+Rehash=6400
+Rebuild=128000
+InputDim=13010
+totRecords=
+totRecordsTest=
+
+Lr=0.0001
+Epoch=10
+Stepsize=1000
+
+sizesOfLayers=1024,1024,16
+numLayer=3
+
+trainData=../datasets/<DATASET>/<DATASET>_train.txt
+testData=../datasets/<DATASET>/<DATASET>_test.txt
+
+weight=../<DATASET>_savedWeight.npz
+savedweight=../<DATASET>_savedWeight.npz
+
+logFile=../datasets/log.txt
+\end{lstlisting}
+
+Com o arquivo configurado com os caminhos corretos da máquina de execução, o treinamento e a subsequente avaliação do modelo na CPU são disparados executando o binário compilado:
+\begin{lstlisting}[language=bash]
+./runme ../SLIDE/Config_<DATASET>.csv
+\end{lstlisting}
+
+\section{Conclusão e Trabalhos Futuros}
+Este semestre evidenciou que a utilização do algoritmo SLIDE para tarefas de detecção de intrusão apresenta alto potencial teórico, caracterizado pela eliminação de latências na extração de features em favor de inspeções em tempo real nas taxas de linha da rede. Contudo, os experimentos iniciais ressaltam que o maior desafio reside na criação de pipelines de dados eficientes que preservem o poder descritivo de atributos contínuos sob codificações altamente esparsas. 
+
+Como trabalhos futuros para mitigar esses limites e elevar os patamares de acurácia, planeja-se: (i) o estudo das propostas de otimização mencionadas na seção \ref{sec:metodologia}; (ii) a incorporação de técnicas inspiradas no modelo de Ghadermazi et al. \cite{ghadermazi2024towards}, tais como a codificação explícita da direção de transmissão dos pacotes (sentido cliente-servidor vs. servidor-cliente) para enriquecer o contexto temporal na entrada da janela deslizante; e (iii) a remoção de atributos que introduzem viés estático de topologia ao classificador, como os endereços IP de origem/destino e as portas de conexão específicas, forçando a rede a aprender a assinatura comportamental abstrata do protocolo de rede e a dinâmica dos cabeçalhos, em vez de memorizar localizações físicas ou números de portas que mudam dinamicamente.
+
+\bibliographystyle{IEEEtran}
+\bibliography{referencias}
+
+\end{document}
