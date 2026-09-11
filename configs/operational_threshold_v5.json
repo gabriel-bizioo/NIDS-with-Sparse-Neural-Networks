@@ -1,0 +1,31 @@
+{
+  "calibration_dataset": "datasets/CICIDS2017/monday/monday_v5_benign.txt",
+  "sample_count": 100000,
+  "model_weights": "configs/weights_v5_port_agnostic.npz",
+  "num_classes": 15,
+  "logit_adjustment_enabled": true,
+  "real_benign_prior": 0.9999,
+  "tau_adjust": 1.0,
+  "noise_statistics": {
+    "min": 0.0,
+    "mean": 7.104873657226563e-10,
+    "median": 0.0,
+    "p95": 0.0,
+    "p99": 0.0,
+    "p99_9": 1.1920928955078125e-07,
+    "max": 2.86102294921875e-06
+  },
+  "thresholds": {
+    "fpr_0.10": 0.0,
+    "fpr_0.05": 0.0,
+    "fpr_0.02": 0.0,
+    "fpr_0.01": 0.0,
+    "fpr_0.005": 0.0,
+    "fpr_0.001": 0.0,
+    "fpr_0.0001": 1e-06,
+    "fpr_0.00001": 1e-06,
+    "fpr_zero": 4e-06
+  },
+  "recommended_threshold": 0.0,
+  "recommended_target": "fpr_0.001"
+}

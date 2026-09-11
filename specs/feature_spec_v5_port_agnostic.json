@@ -1,0 +1,198 @@
+{
+  "name": "Version 5 Port-Agnostic: Stateful Header & Flow Dynamics",
+  "version": "5.1-port-agnostic",
+  "window_size": 10,
+  "local_subnet": "192.168.0.0/16",
+  "features_per_packet_base": 9,
+  "dimensions_per_packet": 291,
+  "total_dimensions": 2910,
+  "expected_active_full_window": 90,
+  "min_active_per_sample": 9,
+  "max_active_per_sample": 130,
+  "expected_sparsity_percent": 96.9072,
+  "fields": [
+    {
+      "name": "ip_proto",
+      "description": "IPv4 Protocol Number (OHE: TCP=6, UDP=17, ICMP=1)",
+      "type": "one_hot",
+      "range": [
+        0,
+        255
+      ],
+      "dimensions": 256
+    },
+    {
+      "name": "tcp_flags",
+      "description": "TCP Control Flags (8 binary flags)",
+      "type": "binary_flags",
+      "flags": [
+        "SYN",
+        "ACK",
+        "FIN",
+        "RST",
+        "PSH",
+        "URG",
+        "ECE",
+        "CWR"
+      ],
+      "dimensions": 8
+    },
+    {
+      "name": "sport_type",
+      "description": "Source Port Category (System, Registered, Dynamic)",
+      "type": "categorical_bins",
+      "brackets": [
+        {
+          "name": "system",
+          "max": 1023
+        },
+        {
+          "name": "registered",
+          "min": 1024,
+          "max": 49151
+        },
+        {
+          "name": "dynamic",
+          "min": 49152
+        }
+      ],
+      "dimensions": 3
+    },
+    {
+      "name": "dport_type",
+      "description": "Destination Port Category (System, Registered, Dynamic) - Eliminates Port-Memorization Bias",
+      "type": "categorical_bins",
+      "brackets": [
+        {
+          "name": "system",
+          "max": 1023
+        },
+        {
+          "name": "registered",
+          "min": 1024,
+          "max": 49151
+        },
+        {
+          "name": "dynamic",
+          "min": 49152
+        }
+      ],
+      "dimensions": 3
+    },
+    {
+      "name": "subnet_roles",
+      "description": "Subnet Directionality: src (local/ext) and dst (local/ext)",
+      "type": "directionality",
+      "dimensions": 4
+    },
+    {
+      "name": "pkt_len",
+      "description": "Binned IP packet length (Tiny, Small, Medium, Large, Jumbo)",
+      "type": "numeric_bins",
+      "brackets": [
+        {
+          "name": "tiny",
+          "max": 64
+        },
+        {
+          "name": "small",
+          "min": 65,
+          "max": 128
+        },
+        {
+          "name": "medium",
+          "min": 129,
+          "max": 512
+        },
+        {
+          "name": "large",
+          "min": 513,
+          "max": 1024
+        },
+        {
+          "name": "jumbo",
+          "min": 1025
+        }
+      ],
+      "dimensions": 5
+    },
+    {
+      "name": "ip_ttl",
+      "description": "Binned IP Time-to-Live (OS Fingerprinting: Linux<=64, Win 65-128, Routers 129-255, Custom>255)",
+      "type": "numeric_bins",
+      "brackets": [
+        {
+          "name": "low_linux",
+          "max": 64
+        },
+        {
+          "name": "medium_win",
+          "min": 65,
+          "max": 128
+        },
+        {
+          "name": "high_network",
+          "min": 129,
+          "max": 255
+        },
+        {
+          "name": "custom",
+          "min": 256
+        }
+      ],
+      "dimensions": 4
+    },
+    {
+      "name": "seq_delta",
+      "description": "Binned TCP Sequence Number Delta modulo 2^32",
+      "type": "numeric_bins",
+      "brackets": [
+        {
+          "name": "zero",
+          "max": 0
+        },
+        {
+          "name": "standard_mss",
+          "min": 1,
+          "max": 1460
+        },
+        {
+          "name": "window_scale",
+          "min": 1461,
+          "max": 65535
+        },
+        {
+          "name": "burst",
+          "min": 65536
+        }
+      ],
+      "dimensions": 4
+    },
+    {
+      "name": "ack_delta",
+      "description": "Binned TCP Acknowledgment Number Delta modulo 2^32",
+      "type": "numeric_bins",
+      "brackets": [
+        {
+          "name": "zero",
+          "max": 0
+        },
+        {
+          "name": "standard_mss",
+          "min": 1,
+          "max": 1460
+        },
+        {
+          "name": "window_scale",
+          "min": 1461,
+          "max": 65535
+        },
+        {
+          "name": "burst",
+          "min": 65536
+        }
+      ],
+      "dimensions": 4
+    }
+  ]
+}

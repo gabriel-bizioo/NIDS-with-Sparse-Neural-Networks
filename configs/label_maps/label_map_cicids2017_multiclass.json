@@ -1,0 +1,19 @@
+{
+  "BENIGN": 0,
+  "Portscan": 1,
+  "DDoS": 2,
+  "Botnet": 3,
+  "Botnet - Attempted": 3,
+  "Infiltration": 4,
+  "Infiltration - Attempted": 4,
+  "Web Attack - Brute Force": 5,
+  "Web Attack - XSS": 6,
+  "Web Attack - Sql Injection": 7,
+  "FTP-Patator": 8,
+  "SSH-Patator": 9,
+  "DoS slowloris": 10,
+  "DoS Slowhttptest": 11,
+  "DoS Hulk": 12,
+  "DoS GoldenEye": 13,
+  "Heartbleed": 14
+}

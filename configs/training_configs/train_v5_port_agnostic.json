@@ -1,0 +1,27 @@
+{
+  "name": "V5 Port-Agnostic Baseline Architecture",
+  "description": "Standard 3-layer Sparse MLP designed for 100% L3 V-Cache residence (23.8 MB W0) on AMD Ryzen CPUs",
+  "architecture": {
+    "hidden_layers": [2048, 256],
+    "num_classes": 15,
+    "activation": "relu",
+    "dropout": 0.05
+  },
+  "training": {
+    "epochs": 3,
+    "batch_size": 4096,
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001,
+    "balance_benign_ratio": 1.0,
+    "class_weighting": "smooth_inverse_frequency",
+    "optimizer": "adamw",
+    "scheduler": "cosine"
+  },
+  "export": {
+    "format": "npz",
+    "weights_naming": {
+      "weight_prefix": "w_layer_",
+      "bias_prefix": "b_layer_"
+    }
+  }
+}

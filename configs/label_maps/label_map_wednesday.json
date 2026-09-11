@@ -1,0 +1,12 @@
+{
+  "BENIGN": 0,
+  "DoS Hulk": 2,
+  "DoS Hulk - Attempted": 2,
+  "DoS GoldenEye": 2,
+  "DoS GoldenEye - Attempted": 2,
+  "DoS Slowloris": 2,
+  "DoS Slowloris - Attempted": 2,
+  "DoS Slowhttptest": 2,
+  "DoS Slowhttptest - Attempted": 2,
+  "Heartbleed": 2
+}

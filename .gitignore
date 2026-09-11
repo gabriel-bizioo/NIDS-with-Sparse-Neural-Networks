@@ -1,7 +1,37 @@
-wholeweek.csv
+# Virtual environments
+.venv/
 venv/
+tmp/
+__pycache__/
+*.pyc
+
+# Datasets and large tables
 datasets/
 sparse-datasets/
+wholeweek.csv
+
+# Compiled executables and model weights
+bin/
+*.bin
+*.npz
 *.pkl
+*.png
+
+# Execution logs
+logs/*
+!logs/.gitkeep
+*.log
+
+# LaTeX build artifacts
+*.aux
+*.out
+*.toc
 *.pdf
-*.txt
+
+# Local archive (legacy code, early notes, previous semester reports)
+archive/
+
+# Unreviewed AI-generated documents and audit reports (kept local until human review)
+audit_reports/
+docs/
+specs/*.md
